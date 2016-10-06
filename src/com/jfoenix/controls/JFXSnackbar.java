@@ -224,21 +224,31 @@ public class JFXSnackbar extends StackPane {
 		animation.setAutoReverse(true);
 		animation.setCycleCount(2);
 
-
-		animation.setOnFinished((e)->{
-			SnackbarEvent qevent = eventQueue.poll();
-			if (qevent != null) {
-				show(qevent.getMessage(), qevent.getActionText(), qevent.getTimeout(), qevent.getActionHandler());
-			} else {
-				//The enqueue method and this listener should be executed sequentially on the FX Thread so there
-				//should not be a race condition
-				proccessingQueue.getAndSet(false);
-			}				
-		});
-
+		if(timeout != 0){
+			animation.setOnFinished((e)->{
+				SnackbarEvent qevent = eventQueue.poll();
+				if (qevent != null) {
+					show(qevent.getMessage(), qevent.getActionText(), qevent.getTimeout(), qevent.getActionHandler());
+				} else {
+					//The enqueue method and this listener should be executed sequentially on the FX Thread so there
+					//should not be a race condition
+					proccessingQueue.getAndSet(false);
+				}				
+			});
+		}
 		animation.play();
 	}
-
+	
+	public void close(){
+		SnackbarEvent qevent = eventQueue.poll();
+		if (qevent != null) {
+			show(qevent.getMessage(), qevent.getActionText(), qevent.getTimeout(), qevent.getActionHandler());
+		} else {
+			//The enqueue method and this listener should be executed sequentially on the FX Thread so there					//should not be a race condition
+			proccessingQueue.getAndSet(false);
+		}
+	}
+	
 	public void refreshPopup(){
 		Bounds contentBound = popup.getLayoutBounds();		
 		double offsetX = Math.ceil((snackbarContainer.getWidth()/2)) - Math.ceil((contentBound.getWidth()/2)) ;
